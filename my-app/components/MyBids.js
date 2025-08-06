@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import {View,Text,FlatList,Image,StyleSheet,ActivityIndicator,} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import { getAuth } from 'firebase/auth';
 
 export default function MyBids() {
   const [biddedItems, setBiddedItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [timerTick, setTimerTick] = useState(0); // used to update timers every second
+  const [timerTick, setTimerTick] = useState(0);
   const isFocused = useIsFocused();
 
   useEffect(() => {
     if (isFocused) {
-      fetchBiddedItems();
+      fetchUserBids();
     }
   }, [isFocused]);
-
-  // Timer tick every 1 second to refresh timeLeft UI
+  // Update timer every second
   useEffect(() => {
     const interval = setInterval(() => {
       setTimerTick(t => t + 1);
@@ -23,19 +22,31 @@ export default function MyBids() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchBiddedItems = async () => {
+  const fetchUserBids = async () => {
     setLoading(true);
     try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        setBiddedItems([]);
+        setLoading(false);
+        return;
+      }
+
+      const userEmail = user.email;
+
+      // Fetch all items
       const response = await fetch('http://10.0.2.2:5000/api/items');
       const data = await response.json();
 
-      const storedItemIds = await AsyncStorage.getItem('biddedItemIds');
-      const biddedItemIds = storedItemIds ? JSON.parse(storedItemIds) : [];
+      const filtered = data.filter(item => 
+        item.bids && item.bids.some(bid => bid.username === userEmail)
+      );
 
-      const filtered = data.filter(item => biddedItemIds.includes(item._id));
       setBiddedItems(filtered);
     } catch (error) {
-      console.error('Error fetching bidded items:', error);
+      console.error('Error fetching user bids:', error);
     } finally {
       setLoading(false);
     }
@@ -52,11 +63,18 @@ export default function MyBids() {
   const renderItem = ({ item }) => {
     const timeLeft = calculateTimeLeft(item.endTime);
 
+   
+    const auth = getAuth();
+    const userEmail = auth.currentUser?.email;
+    const userBids = item.bids?.filter(bid => bid.username === userEmail) || [];
+    const highestUserBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount)) : 0;
+
     return (
       <View style={styles.card}>
         <Image source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }} style={styles.image} />
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.detail}>Current Bid: ${item.currentBid}</Text>
+        <Text style={styles.detail}>Your Bid: ${highestUserBid}</Text>
         <Text style={timeLeft === 'Ended' ? styles.ended : styles.timer}>
           Ending: {timeLeft}
         </Text>

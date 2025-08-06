@@ -1,38 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image} from 'react-native';
+import { getAuth } from 'firebase/auth';
+
 
 export default function Profile({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
 
-  // Fetch user info from AsyncStorage on mount
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUsername = await AsyncStorage.getItem('username');
-        const storedEmail = await AsyncStorage.getItem('email');
-        if (storedUsername) setUsername(storedUsername);
-        if (storedEmail) setEmail(storedEmail);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    };
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
 
-    fetchUser();
+    if (currentUser) {
+      setUsername(currentUser.displayName || 'No username set');
+      setEmail(currentUser.email || 'No email set');
+    } else {
+
+      navigation.replace('Login');
+    }
   }, []);
 
   const handleLogout = async () => {
     try {
-      // Clear all user-related data from AsyncStorage
-      await AsyncStorage.multiRemove(['username', 'email', 'token']); // add keys you use
-      // Navigate back to login screen (adjust route name as needed)
+      const auth = getAuth();
+      await auth.signOut();
       navigation.replace('Login');
     } catch (error) {
       Alert.alert('Logout Error', 'Failed to logout. Please try again.');
@@ -41,6 +32,9 @@ export default function Profile({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require('../profile.png')}
+        style={{ width: 200, height: 200, borderRadius: 50, alignSelf: 'center', marginBottom: 20 }}/>
       <Text style={styles.label}>Username:</Text>
       <Text style={styles.value}>{username || 'Not available'}</Text>
 
@@ -57,14 +51,14 @@ export default function Profile({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: 14,
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
   label: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 20,
+    marginTop: 40,
   },
   value: {
     fontSize: 20,
@@ -72,7 +66,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: 50,
-    backgroundColor: '#ff4d4d',
+    backgroundColor: '#f28c28',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

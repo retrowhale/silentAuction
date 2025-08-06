@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { auth } from './firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
-const Login = ({ navigation }) => {
-  const [email, setEmail] = useState('');  
+const Signup = ({ navigation }) => {
+  const [username, setUsername] = useState(''); 
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Missing Info', 'Please enter both email and password');
+  const handleSignUp = async () => {
+    if (!username || !email || !password) {
+      Alert.alert('Missing Info', 'Please enter username, email, and password');
       return;
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert('Success', 'Logged in!');
-      navigation.navigate('Main');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+      await updateProfile(userCredential.user, { displayName: username });
+
+      Alert.alert('Success', 'Account created! You can now log in.');
+      navigation.navigate('Login');
     } catch (error) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Signup Failed', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome!</Text>
+      <Text style={styles.title}>Create Account</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your username"
+        placeholderTextColor="#999"
+        value={username}
+        onChangeText={setUsername}
+        autoCapitalize="none"
+      />
 
       <TextInput
         style={styles.input}
@@ -32,8 +45,8 @@ const Login = ({ navigation }) => {
         placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -45,18 +58,18 @@ const Login = ({ navigation }) => {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
+       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginText}>Already have an account? Login</Text>
+            </TouchableOpacity>
     </View>
   );
 };
 
-export default Login;
+export default Signup;
 
 const styles = StyleSheet.create({
   container: {
@@ -64,7 +77,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 24,
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
@@ -96,11 +109,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  signupText: {
+
+  loginText: {
   marginTop: 20,
   color: '#104582ff',
   fontSize: 16,
   fontWeight: 'bold',
-  
-}
+   }
 });

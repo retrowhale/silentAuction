@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import {View,Text,Image, TextInput,TouchableOpacity,  StyleSheet,Alert,} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from 'react';
+import { View,Text,Image,TextInput,TouchableOpacity,StyleSheet,Alert,} from 'react-native';
+import { getAuth } from 'firebase/auth';
 
 export default function DetailedScreen({ route, navigation }) {
   const { item, onBidPlaced } = route.params;
 
   const [bid, setBid] = useState('');
-  const [currentBid, setCurrentBid] = useState(item.currentBid ?? item.startingBid);
+  const [currentBid, setCurrentBid] = useState(item.currentBid || 0);
+
+  useEffect(() => {
+    setCurrentBid(item.currentBid);
+  }, [item]);
 
   const handleBidSubmit = async () => {
     const bidValue = parseFloat(bid);
@@ -16,10 +20,22 @@ export default function DetailedScreen({ route, navigation }) {
     }
 
     try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        Alert.alert('Error', 'You must be logged in to place a bid.');
+        return;
+      }
+
+      const username = currentUser.email;
+
       const response = await fetch(`http://10.0.2.2:5000/api/items/${item._id}/bid`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bid: bidValue }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bid: bidValue, username }),
       });
 
       if (!response.ok) {
@@ -32,15 +48,6 @@ export default function DetailedScreen({ route, navigation }) {
       Alert.alert('Success', 'Your bid was placed successfully!');
       setBid('');
 
-      // Save item ID in AsyncStorage to mark it as bidded
-      const storedItemIds = await AsyncStorage.getItem('biddedItemIds');
-      const biddedItemIds = storedItemIds ? JSON.parse(storedItemIds) : [];
-      if (!biddedItemIds.includes(item._id)) {
-        biddedItemIds.push(item._id);
-        await AsyncStorage.setItem('biddedItemIds', JSON.stringify(biddedItemIds));
-      }
-
-      // Update the item in Home by calling the callback if exists
       if (onBidPlaced) {
         onBidPlaced(updatedItem);
       }
@@ -48,13 +55,12 @@ export default function DetailedScreen({ route, navigation }) {
       Alert.alert('Error', err.message);
     }
   };
-
-  return (
+return (
     <View style={styles.container}>
       <Image
-        source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }}
-        style={styles.image}
-      />
+  source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }}
+  style={styles.image}
+/>
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
 
@@ -129,4 +135,4 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-});
+})

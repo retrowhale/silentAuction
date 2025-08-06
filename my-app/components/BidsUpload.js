@@ -119,7 +119,11 @@ export default function BidsUpload() {
         />
       )}
 
-      <Button title="Submit Bid" onPress={handleSubmit} />
+  
+      <TouchableOpacity  onPress={handleSubmit} style={styles.button}>
+        <Text style={styles.buttonText}>Submit </Text>
+      </TouchableOpacity>
+
     </View>
   );
 }
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#f28c28',
     padding: 10,
     alignItems: 'center',
     borderRadius: 5,

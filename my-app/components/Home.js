@@ -6,7 +6,7 @@ export default function Home({ navigation }) {
   const [items, setItems] = useState([]);
   const isFocused = useIsFocused();
 
-  // Fetch items from server
+ 
   const fetchItems = async () => {
     try {
       const response = await fetch('http://10.0.2.2:5000/api/items');
@@ -30,7 +30,7 @@ export default function Home({ navigation }) {
     });
   };
 
-  // Calculate remaining time for each item (unchanged)
+  // Calculate remaining time for each item 
   const calculateTimeLeft = (endTime) => {
     const difference = new Date(endTime) - new Date();
     if (difference <= 0) return 'Ended';
@@ -39,7 +39,7 @@ export default function Home({ navigation }) {
     return `${minutes}m ${seconds}s`;
   };
 
-  // Render each item card (pass onBidPlaced callback)
+
   const renderItem = ({ item }) => {
     const timeLeft = calculateTimeLeft(item.endTime);
 
@@ -66,7 +66,7 @@ export default function Home({ navigation }) {
 
   return (
     <FlatList
-      data={items}
+      data={items.filter(item => new Date(item.endTime) > new Date())} 
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
       contentContainerStyle={styles.container}
@@ -83,12 +83,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
-    elevation: 2,
+    elevation: 4,
     overflow: 'hidden',
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 120,
   },
   info: {
     flex: 1,
