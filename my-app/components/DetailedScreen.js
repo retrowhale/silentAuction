@@ -30,7 +30,7 @@ export default function DetailedScreen({ route, navigation }) {
 
       const username = currentUser.email;
 
-      const response = await fetch(`http://10.0.2.2:5000/api/items/${item._id}/bid`, {
+      const response = await fetch(`https://silentauction-si9k.onrender.com/api/items/${item._id}/bid`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -57,10 +57,18 @@ export default function DetailedScreen({ route, navigation }) {
   };
 return (
     <View style={styles.container}>
-      <Image
-  source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }}
-  style={styles.image}
-/>
+      {/* Fix image URL handling: if imageUrl is missing or already absolute, handle accordingly */}
+      {(() => {
+        let imageUri = item.imageUrl;
+        if (imageUri) {
+          if (!imageUri.startsWith('http')) {
+            imageUri = `https://silentauction-si9k.onrender.com/${imageUri.replace(/^uploads\//, 'uploads/')}`;
+          }
+        } else {
+          imageUri = 'https://silentauction-si9k.onrender.com/assets/icon.png';
+        }
+        return <Image source={{ uri: imageUri }} style={styles.image} />;
+      })()}
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
 

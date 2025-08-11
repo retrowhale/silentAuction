@@ -37,7 +37,7 @@ export default function MyBids() {
       const userEmail = user.email;
 
       // Fetch all items
-      const response = await fetch('http://10.0.2.2:5000/api/items');
+      const response = await fetch('https://silentauction-si9k.onrender.com/api/items');
       const data = await response.json();
 
       const filtered = data.filter(item => 
@@ -63,15 +63,25 @@ export default function MyBids() {
   const renderItem = ({ item }) => {
     const timeLeft = calculateTimeLeft(item.endTime);
 
-   
     const auth = getAuth();
     const userEmail = auth.currentUser?.email;
     const userBids = item.bids?.filter(bid => bid.username === userEmail) || [];
     const highestUserBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount)) : 0;
 
+    // Fix image URL handling: if imageUrl is missing or already absolute, handle accordingly
+    let imageUri = item.imageUrl;
+    if (imageUri) {
+      if (!imageUri.startsWith('http')) {
+        imageUri = `https://silentauction-si9k.onrender.com/${imageUri.replace(/^uploads\//, 'uploads/')}`;
+      }
+    } else {
+      // fallback image if missing
+      imageUri = 'https://silentauction-si9k.onrender.com/assets/icon.png';
+    }
+
     return (
       <View style={styles.card}>
-        <Image source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }} style={styles.image} />
+        <Image source={{ uri: imageUri }} style={styles.image} />
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.detail}>Current Bid: ${item.currentBid}</Text>
         <Text style={styles.detail}>Your Bid: ${highestUserBid}</Text>

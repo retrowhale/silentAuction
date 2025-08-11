@@ -9,7 +9,7 @@ export default function Home({ navigation }) {
  
   const fetchItems = async () => {
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/items');
+      const response = await fetch('https://silentauction-si9k.onrender.com/api/items');
       const data = await response.json();
       setItems(data);
     } catch (error) {
@@ -42,6 +42,16 @@ export default function Home({ navigation }) {
 
   const renderItem = ({ item }) => {
     const timeLeft = calculateTimeLeft(item.endTime);
+    // Fix image URL handling: if imageUrl is missing or already absolute, handle accordingly
+    let imageUri = item.imageUrl;
+    if (imageUri) {
+      if (!imageUri.startsWith('http')) {
+        imageUri = `https://silentauction-si9k.onrender.com/${imageUri.replace(/^uploads\//, 'uploads/')}`;
+      }
+    } else {
+      // fallback image if missing
+      imageUri = 'https://silentauction-si9k.onrender.com/assets/icon.png';
+    }
 
     return (
       <TouchableOpacity
@@ -49,7 +59,7 @@ export default function Home({ navigation }) {
       >
         <View style={styles.card}>
           <Image
-            source={{ uri: `http://10.0.2.2:5000/${item.imageUrl}` }}
+            source={{ uri: imageUri }}
             style={styles.image}
           />
           <View style={styles.info}>
