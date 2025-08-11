@@ -52,12 +52,10 @@ export default function BidsUpload() {
     });
 
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/items', {
+      const response = await fetch('https://silentauction-si9k.onrender.com/api/items', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        // Do NOT set Content-Type header manually! Let fetch set it so boundary is included
       });
 
       const data = await response.json();
